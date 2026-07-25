@@ -9,8 +9,9 @@ public:
 
     Token NextToken();
 
-private:
+// private:
     char Peek() const;
+    char PeekNext() const ;
     char Advance();
 
     void SkipWhitespace();
