@@ -2,6 +2,16 @@
 
 #include "token.h"
 #include <string>
+#include <unordered_map>
+
+namespace Keywords {
+
+    const std::unordered_map<std::string, TokenType> tokenTypeMap{
+        {"int", TokenType::Int},
+        {"return",TokenType::Return}
+    };
+
+}
 
 class Lexer {
 public:
@@ -18,7 +28,7 @@ public:
     bool IsAtEnd() const;
 
     Token ReadIdentifier();
-    Token Number();
+    Token ReadNumber();
 
     std::string source;
     size_t position = 0;

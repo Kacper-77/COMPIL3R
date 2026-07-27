@@ -44,4 +44,5 @@ struct Token {
     std::string text;
     int line = 0;
     int column = 0;
+    size_t length = 0;
 };
