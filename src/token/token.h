@@ -5,7 +5,20 @@
 enum class TokenType {
     // keywords
     Int,
+    Void,
+    Bool,
+
+    If,
+    Else,
+    While,
+    For,
+
     Return,
+
+    True,
+    False,
+
+    Const,
 
     // identifiers / literals
     Identifier,
@@ -18,6 +31,7 @@ enum class TokenType {
     Slash,
 
     Assign,
+    Not,
 
     // comparison
     EqualEqual,
@@ -46,3 +60,4 @@ struct Token {
     int column = 0;
     size_t length = 0;
 };
+

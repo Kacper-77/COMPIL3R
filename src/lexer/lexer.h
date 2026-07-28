@@ -7,8 +7,25 @@
 namespace Keywords {
 
     const std::unordered_map<std::string, TokenType> tokenTypeMap{
+        // types
         {"int", TokenType::Int},
-        {"return",TokenType::Return}
+        {"void", TokenType::Void},
+        {"bool", TokenType::Bool},
+
+        // control flow
+        {"if", TokenType::If},
+        {"else", TokenType::Else},
+        {"while", TokenType::While},
+        {"for", TokenType::For},
+
+        // functions
+        {"return", TokenType::Return},
+
+        // logical
+        {"true", TokenType::True},
+        {"false", TokenType::False},
+
+        {"const", TokenType::Const}
     };
 
 }
@@ -19,7 +36,7 @@ public:
 
     Token NextToken();
 
-// private:
+private:
     char Peek() const;
     char PeekNext() const ;
     char Advance();
@@ -35,4 +52,6 @@ public:
 
     int line = 1;
     int column = 1;
+
+    Token MakeInvalidToken();
 };
