@@ -18,8 +18,10 @@ add_executable(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
     PRIVATE
         src
-        src/lexer
-        src/token
+        src/lexer/
+        src/token/
+        src/ast/
+        src/parser/
 )
 
 if (MSVC)
