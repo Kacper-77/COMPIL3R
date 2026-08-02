@@ -28,5 +28,5 @@ private:
     bool Check(TokenType type) const;
     bool Match(TokenType type);
 
-    const Token& Consume(TokenType type);
+    const Token& Consume(const TokenType type);
 };

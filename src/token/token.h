@@ -61,3 +61,4 @@ struct Token {
     size_t length = 0;
 };
 
+const char* TokenName(TokenType type);
