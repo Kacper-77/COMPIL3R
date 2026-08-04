@@ -1,14 +1,11 @@
 #include "parser.h"
+#include "ast.h"
 #include "token.h"
+#include <memory>
 #include <stdexcept>
 
 Parser::Parser(const std::vector<Token>& tokens)
     : tokens{tokens} {}
-
-
-std::unique_ptr<ASTNode> Parser::Parse() {
-    return nullptr;
-}
 
 const Token& Parser::Peek() const {
     return tokens[current];
@@ -54,4 +51,104 @@ const Token& Parser::Consume(const TokenType type) {
         );
     }
     return Advance();
+}
+
+/* PARSE */
+
+std::unique_ptr<ASTNode> Parser::Parse() {
+    auto program = std::make_unique<ProgramNode>();
+
+    while (!IsAtEnd()) {
+        auto node = ParseDeclaration();
+
+        if (node)
+            program->declarations.push_back(std::move(node));
+    }
+    return program;
+}
+
+std::unique_ptr<ASTNode> Parser::ParseDeclaration() {
+    return nullptr;
+}
+
+/* Functions / Blocks */
+
+std::unique_ptr<ASTNode> Parser::ParseFunction() {
+    return nullptr;
+}
+
+std::unique_ptr<ASTNode> Parser::ParseBlock() {
+    return nullptr;
+}
+
+/* Statements */
+
+std::unique_ptr<ASTNode> Parser::ParseStatement() {
+    return nullptr;
+}
+
+std::unique_ptr<ASTNode> Parser::ParseVariableDeclaration() {
+    return nullptr;
+}
+
+std::unique_ptr<ASTNode> Parser::ParseReturnStatement() {
+    return nullptr;
+}
+
+std::unique_ptr<ASTNode> Parser::ParseIfStatement() {
+    return nullptr;
+}
+
+std::unique_ptr<ASTNode> Parser::ParseWhileStatement() {
+    return nullptr;
+}
+
+std::unique_ptr<ASTNode> Parser::ParseForStatement() {
+    return nullptr;
+}
+
+std::unique_ptr<ASTNode> Parser::ParseBreakStatement() {
+    return nullptr;
+}
+
+std::unique_ptr<ASTNode> Parser::ParseContinueStatement() {
+    return nullptr;
+}
+
+std::unique_ptr<ASTNode> Parser::ParseExpressionStatement() {
+    return nullptr;
+}
+
+/* Expressions */
+
+std::unique_ptr<ASTNode> Parser::ParseExpression() {
+    return nullptr;
+}
+
+std::unique_ptr<ASTNode> Parser::ParseAssignment() {
+    return nullptr;
+}
+
+std::unique_ptr<ASTNode> Parser::ParseEquality() {
+    return nullptr;
+}
+
+std::unique_ptr<ASTNode> Parser::ParseComparison() {
+    return nullptr;
+}
+
+std::unique_ptr<ASTNode> Parser::ParseTerm() {
+    return nullptr;
+}
+
+std::unique_ptr<ASTNode> Parser::ParseFactor() {
+    return nullptr;
+}
+
+std::unique_ptr<ASTNode> Parser::ParseUnary() {
+    return nullptr;
+}
+
+std::unique_ptr<ASTNode> Parser::ParsePrimary() {
+    return nullptr;
 }

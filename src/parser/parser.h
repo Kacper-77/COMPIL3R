@@ -29,4 +29,32 @@ private:
     bool Match(TokenType type);
 
     const Token& Consume(const TokenType type);
+
+    // entry
+    std::unique_ptr<ASTNode> ParseDeclaration();
+
+    // functions / blocks
+    std::unique_ptr<ASTNode> ParseFunction();
+    std::unique_ptr<ASTNode> ParseBlock();
+
+    // statements
+    std::unique_ptr<ASTNode> ParseStatement();
+    std::unique_ptr<ASTNode> ParseVariableDeclaration();
+    std::unique_ptr<ASTNode> ParseReturnStatement();
+    std::unique_ptr<ASTNode> ParseIfStatement();
+    std::unique_ptr<ASTNode> ParseWhileStatement();
+    std::unique_ptr<ASTNode> ParseForStatement();
+    std::unique_ptr<ASTNode> ParseBreakStatement();
+    std::unique_ptr<ASTNode> ParseContinueStatement();
+    std::unique_ptr<ASTNode> ParseExpressionStatement();
+
+    // expressions
+    std::unique_ptr<ASTNode> ParseExpression();
+    std::unique_ptr<ASTNode> ParseAssignment();
+    std::unique_ptr<ASTNode> ParseEquality();
+    std::unique_ptr<ASTNode> ParseComparison();
+    std::unique_ptr<ASTNode> ParseTerm();
+    std::unique_ptr<ASTNode> ParseFactor();
+    std::unique_ptr<ASTNode> ParseUnary();
+    std::unique_ptr<ASTNode> ParsePrimary();
 };
