@@ -138,17 +138,85 @@ std::unique_ptr<ASTNode> Parser::ParseComparison() {
 }
 
 std::unique_ptr<ASTNode> Parser::ParseTerm() {
-    return nullptr;
+    auto expr = ParseFactor();
+
+    while (Match(TokenType::Plus) || Match(TokenType::Minus)) {
+        const Token& op = Previous();
+        auto right = ParseFactor();
+
+        expr = std::make_unique<BinaryExpressionNode>(
+            op.type,
+            std::move(expr),
+            std::move(right),
+            SourceLocation{op.line, op.column}
+        );
+    }
+    return expr;
 }
 
 std::unique_ptr<ASTNode> Parser::ParseFactor() {
-    return nullptr;
+    auto expr = ParseUnary();
+
+    while (Match(TokenType::Star) || Match(TokenType::Slash)) {
+        const Token& op = Previous();
+        auto right = ParseUnary();
+
+        expr = std::make_unique<BinaryExpressionNode>(
+            op.type,
+            std::move(expr),
+            std::move(right),
+            SourceLocation{op.line, op.column}
+        );
+    }
+    return expr;
 }
 
 std::unique_ptr<ASTNode> Parser::ParseUnary() {
-    return nullptr;
+    if (Match(TokenType::Minus) || Match(TokenType::Not)) {
+        const Token& op = Advance();
+        auto operand = ParseUnary();
+
+        return std::make_unique<UnaryExpressionNode>(
+            op.type,
+            std::move(operand),
+            SourceLocation{op.line, op.column}
+        );
+    }
+    return ParsePrimary();
 }
 
 std::unique_ptr<ASTNode> Parser::ParsePrimary() {
-    return nullptr;
+    if (Match(TokenType::Number)) {
+        const Token& t = Previous();
+        return std::make_unique<NumberNode>(
+            std::stoi(t.text),
+            SourceLocation{t.line, t.column}
+        );
+    }
+
+    if (Match(TokenType::True) || Match(TokenType::False)) {
+        const Token& t = Previous();
+        return std::make_unique<BooleanNode>(
+            t.type == TokenType::True,
+            SourceLocation{t.line, t.column}
+        );
+    }
+
+    if (Match(TokenType::Identifier)) {
+        const Token& t = Previous();
+        return std::make_unique<IdentifierNode>(
+            t.text, SourceLocation{t.line, t.column}
+        );
+    }
+    
+    const Token& t = Peek();
+
+    throw std::runtime_error(
+        "Parser error at: " +
+        std::to_string(t.line) + ":" +
+        std::to_string(t.column) +
+        "\nExpected primary expression, got '" +
+        std::string(TokenName(t.type)) +
+        "'."
+    );
 }
