@@ -20,11 +20,9 @@ const Token& Parser::Advance() {
     return Previous();
 }
 
-
 bool Parser::IsAtEnd() const {
     return Peek().type == TokenType::EndOfFile; 
 }
-
 
 bool Parser::Check(TokenType type) const {
     return Peek().type == type;
@@ -116,25 +114,74 @@ std::unique_ptr<ASTNode> Parser::ParseContinueStatement() {
 }
 
 std::unique_ptr<ASTNode> Parser::ParseExpressionStatement() {
-    return nullptr;
+    const Token& t = Peek();
+    auto expr = ParseExpression();
+    Consume(TokenType::Semicolon);
+
+    return std::make_unique<ExpressionStatementNode>(
+        std::move(expr),
+        SourceLocation{t.line, t.column}
+    );
 }
 
 /* Expressions */
 
 std::unique_ptr<ASTNode> Parser::ParseExpression() {
-    return nullptr;
+    return ParseAssignment();
 }
 
 std::unique_ptr<ASTNode> Parser::ParseAssignment() {
-    return nullptr;
+    auto target = ParseEquality();
+
+    if (Match(TokenType::Assign)) {
+        const Token& op = Previous();
+        auto value = ParseAssignment();
+
+        return std::make_unique<AssignmentExpressionNode>(
+            std::move(target),
+            std::move(value),
+            SourceLocation{op.line, op.column}
+        );
+    }
+    return target;    
 }
 
 std::unique_ptr<ASTNode> Parser::ParseEquality() {
-    return nullptr;
+    auto expr = ParseComparison();
+
+    while (Match(TokenType::EqualEqual) || Match(TokenType::NotEqual)) {
+        const Token& op = Previous();
+        auto right = ParseComparison();
+
+        expr = std::make_unique<BinaryExpressionNode>(
+            op.type,
+            std::move(expr),
+            std::move(right),
+            SourceLocation{op.line, op.column}
+        );
+    }
+    return expr;
 }
 
 std::unique_ptr<ASTNode> Parser::ParseComparison() {
-    return nullptr;
+    auto expr = ParseTerm();
+
+    while (Match(TokenType::Less) ||
+        Match(TokenType::LessEqual) ||
+        Match(TokenType::Greater) ||
+        Match(TokenType::GreaterEqual)) {
+        
+        const Token& op = Previous();
+        auto right = ParseTerm();
+
+        expr = std::make_unique<BinaryExpressionNode>(
+            op.type,
+            std::move(expr),
+            std::move(right),
+            SourceLocation{op.line, op.column}
+        );
+    }
+    return expr;
 }
 
 std::unique_ptr<ASTNode> Parser::ParseTerm() {
@@ -173,7 +220,7 @@ std::unique_ptr<ASTNode> Parser::ParseFactor() {
 
 std::unique_ptr<ASTNode> Parser::ParseUnary() {
     if (Match(TokenType::Minus) || Match(TokenType::Not)) {
-        const Token& op = Advance();
+        const Token& op = Previous();
         auto operand = ParseUnary();
 
         return std::make_unique<UnaryExpressionNode>(
