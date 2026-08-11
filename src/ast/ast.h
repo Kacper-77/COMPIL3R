@@ -120,7 +120,6 @@ public:
     std::unique_ptr<ASTNode> left;
     std::unique_ptr<ASTNode> right;
 
-
     BinaryExpressionNode(
         TokenType op,
         std::unique_ptr<ASTNode> left,
@@ -156,7 +155,6 @@ public:
 
     std::vector<std::unique_ptr<ASTNode>> arguments;
 
-
     CallExpressionNode(
         const std::string& callee,
         SourceLocation location = {})
@@ -171,9 +169,7 @@ public:
 class VariableDeclarationNode : public ASTNode {
 public:
     std::string name;
-
     std::unique_ptr<ASTNode> initializer;
-
 
     VariableDeclarationNode(
         const std::string& name,
@@ -189,7 +185,6 @@ public:
 class ReturnStatementNode : public ASTNode {
 public:
     std::unique_ptr<ASTNode> expression;
-
 
     ReturnStatementNode(
         std::unique_ptr<ASTNode> expression,
@@ -261,6 +256,40 @@ public:
     {}
 };
 
+class ForStatementNode : public ASTNode {
+public:
+    std::unique_ptr<ASTNode> initializer;
+    std::unique_ptr<ASTNode> condition;
+    std::unique_ptr<ASTNode> increment;
+    std::unique_ptr<ASTNode> body;
+
+    ForStatementNode(
+        std::unique_ptr<ASTNode> initializer,
+        std::unique_ptr<ASTNode> condition,
+        std::unique_ptr<ASTNode> increment,
+        std::unique_ptr<ASTNode> body,
+        SourceLocation location = {})
+        : ASTNode{ASTNodeType::ForStatement, location},
+          initializer{std::move(initializer)},
+          condition{std::move(condition)},
+          increment{std::move(increment)},
+          body{std::move(body)}
+    {}
+};
+
+class BreakStatementNode : public ASTNode {
+public:
+    BreakStatementNode(SourceLocation location = {})
+        : ASTNode{ASTNodeType::BreakStatement, location}
+    {}
+};
+
+class ContinueStatementNode : public ASTNode {
+public:
+    ContinueStatementNode(SourceLocation location = {})
+        : ASTNode{ASTNodeType::ContinueStatement, location}
+    {}
+};
 
 /* Functions / Program */
 
@@ -301,7 +330,6 @@ public:
 class ProgramNode : public ASTNode {
 public:
     std::vector<std::unique_ptr<ASTNode>> declarations;
-
 
     ProgramNode(SourceLocation location = {})
         : ASTNode{ASTNodeType::Program, location}
