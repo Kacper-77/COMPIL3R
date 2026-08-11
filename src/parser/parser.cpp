@@ -3,6 +3,7 @@
 #include "token.h"
 #include <memory>
 #include <stdexcept>
+#include <utility>
 
 Parser::Parser(const std::vector<Token>& tokens)
     : tokens{tokens} {}
@@ -86,31 +87,152 @@ std::unique_ptr<ASTNode> Parser::ParseStatement() {
 }
 
 std::unique_ptr<ASTNode> Parser::ParseVariableDeclaration() {
-    return nullptr;
+    const Token& t = Peek();
+    
+    std::unique_ptr<ASTNode> initilizer;
+    bool isConst = Match(TokenType::Const);
+
+    TokenType type;
+
+    if (Match(TokenType::Int)) 
+        type = TokenType::Int;
+    else if (Match(TokenType::Bool))
+        type = TokenType::Bool;
+    else
+        throw std::runtime_error("Unknown type at: " 
+                            + std::to_string(t.line) 
+                            + " " + std::to_string(t.column));
+    auto name = Peek();
+    Consume(TokenType::Identifier);
+    
+    if (!Check(TokenType::Semicolon)) {
+        Consume(TokenType::Assign);
+        initilizer = ParseExpression();
+    }
+
+    return std::make_unique<VariableDeclarationNode>(
+        type,
+        name.text,
+        std::move(initilizer),
+        isConst,
+        SourceLocation{t.line, t.column}
+    );
 }
 
 std::unique_ptr<ASTNode> Parser::ParseReturnStatement() {
-    return nullptr;
+    const Token& t = Peek();
+
+    Consume(TokenType::Return);
+
+    std::unique_ptr<ASTNode> expr;
+    
+    if (Check(TokenType::Semicolon)) 
+        expr = nullptr;
+    else
+        expr = ParseExpression();
+
+    Consume(TokenType::Semicolon);
+
+    return std::make_unique<ReturnStatementNode>(
+        std::move(expr),
+        SourceLocation{t.line, t.column}
+    );
 }
 
 std::unique_ptr<ASTNode> Parser::ParseIfStatement() {
-    return nullptr;
+    const Token& t = Peek();
+
+    Consume(TokenType::If);
+    Consume(TokenType::LParen);
+
+    auto condition = ParseExpression();
+    Consume(TokenType::RParen);
+
+    auto thenB = ParseBlock();
+    std::unique_ptr<ASTNode> elseB;
+
+    if (Match(TokenType::Else)) {
+        const Token& token = Peek();
+
+        if (token.type == TokenType::If) {
+            elseB = ParseIfStatement();
+        } else {
+            elseB = ParseBlock();
+        }
+    }
+
+    return std::make_unique<IfStatementNode>(
+        std::move(condition),
+        std::move(thenB),
+        std::move(elseB),
+        SourceLocation{t.line, t.column}
+    );
 }
 
 std::unique_ptr<ASTNode> Parser::ParseWhileStatement() {
-    return nullptr;
+    const Token& t = Peek();
+
+    Consume(TokenType::While);
+    Consume(TokenType::LParen);
+
+    auto condition = ParseExpression();
+    Consume(TokenType::RParen);
+
+    auto body = ParseBlock();
+
+    return std::make_unique<WhileStatementNode>(
+        std::move(condition),
+        std::move(body),
+        SourceLocation{t.line, t.column}
+    );
 }
 
 std::unique_ptr<ASTNode> Parser::ParseForStatement() {
-    return nullptr;
+    const Token& t = Peek();
+
+    Consume(TokenType::For);
+    Consume(TokenType::LParen);
+
+    auto initilizer = ParseDeclaration();
+    Consume(TokenType::Semicolon);
+
+    auto condition = ParseExpression();
+    Consume(TokenType::Semicolon);
+
+    auto increment = ParseExpression();
+    Consume(TokenType::RParen);
+
+    auto body = ParseBlock();
+
+    return std::make_unique<ForStatementNode>(
+        std::move(initilizer),
+        std::move(condition),
+        std::move(increment),
+        std::move(body),
+        SourceLocation{t.line, t.column}
+    );
 }
 
 std::unique_ptr<ASTNode> Parser::ParseBreakStatement() {
-    return nullptr;
+    const Token& t = Peek();
+
+    Consume(TokenType::Break);
+    Consume(TokenType::Semicolon);
+
+    return std::make_unique<BreakStatementNode>(
+        SourceLocation{t.line, t.column}
+    );
 }
 
 std::unique_ptr<ASTNode> Parser::ParseContinueStatement() {
-    return nullptr;
+    const Token& t = Peek();
+
+    Consume(TokenType::Continue);
+    Consume(TokenType::Semicolon);
+
+    return std::make_unique<ContinueStatementNode>(
+        SourceLocation{t.line, t.column}
+    );
 }
 
 std::unique_ptr<ASTNode> Parser::ParseExpressionStatement() {

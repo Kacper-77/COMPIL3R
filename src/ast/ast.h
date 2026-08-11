@@ -99,7 +99,6 @@ public:
 class UnaryExpressionNode : public ASTNode {
 public:
     TokenType op;
-
     std::unique_ptr<ASTNode> operand;
 
     UnaryExpressionNode(
@@ -116,7 +115,6 @@ public:
 class BinaryExpressionNode : public ASTNode {
 public:
     TokenType op;
-
     std::unique_ptr<ASTNode> left;
     std::unique_ptr<ASTNode> right;
 
@@ -163,21 +161,26 @@ public:
     {}
 };
 
-
 /* Statements */
 
 class VariableDeclarationNode : public ASTNode {
 public:
+    TokenType type;
     std::string name;
     std::unique_ptr<ASTNode> initializer;
+    bool isConst;
 
     VariableDeclarationNode(
+        TokenType type,
         const std::string& name,
         std::unique_ptr<ASTNode> initializer,
+        bool isConst,
         SourceLocation location = {})
         : ASTNode{ASTNodeType::VariableDeclaration, location},
+          type{type},
           name{name},
-          initializer{std::move(initializer)}
+          initializer{std::move(initializer)},
+          isConst{isConst}
     {}
 };
 
@@ -199,7 +202,6 @@ class ExpressionStatementNode : public ASTNode {
 public:
     std::unique_ptr<ASTNode> expression;
 
-
     ExpressionStatementNode(
         std::unique_ptr<ASTNode> expression,
         SourceLocation location = {})
@@ -213,7 +215,6 @@ class BlockNode : public ASTNode {
 public:
     std::vector<std::unique_ptr<ASTNode>> statements;
 
-
     BlockNode(SourceLocation location = {})
         : ASTNode{ASTNodeType::Block, location}
     {}
@@ -225,7 +226,6 @@ public:
     std::unique_ptr<ASTNode> condition;
     std::unique_ptr<ASTNode> thenBranch;
     std::unique_ptr<ASTNode> elseBranch;
-
 
     IfStatementNode(
         std::unique_ptr<ASTNode> condition,
@@ -245,7 +245,6 @@ public:
     std::unique_ptr<ASTNode> condition;
     std::unique_ptr<ASTNode> body;
 
-
     WhileStatementNode(
         std::unique_ptr<ASTNode> condition,
         std::unique_ptr<ASTNode> body,
@@ -255,6 +254,7 @@ public:
           body{std::move(body)}
     {}
 };
+
 
 class ForStatementNode : public ASTNode {
 public:
@@ -277,12 +277,14 @@ public:
     {}
 };
 
+
 class BreakStatementNode : public ASTNode {
 public:
     BreakStatementNode(SourceLocation location = {})
         : ASTNode{ASTNodeType::BreakStatement, location}
     {}
 };
+
 
 class ContinueStatementNode : public ASTNode {
 public:
@@ -297,7 +299,6 @@ class ParameterNode : public ASTNode {
 public:
     std::string name;
 
-
     ParameterNode(
         const std::string& name,
         SourceLocation location = {})
@@ -310,11 +311,8 @@ public:
 class FunctionNode : public ASTNode {
 public:
     std::string name;
-
     std::vector<std::unique_ptr<ASTNode>> parameters;
-
     std::unique_ptr<ASTNode> body;
-
 
     FunctionNode(
         const std::string& name,
