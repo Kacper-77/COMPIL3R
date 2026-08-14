@@ -4,12 +4,21 @@
 #include <memory>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 
 Parser::Parser(const std::vector<Token>& tokens)
     : tokens{tokens} {}
 
 const Token& Parser::Peek() const {
     return tokens[current];
+}
+
+const Token& Parser::PeekNext() const {
+    return tokens[current + 1];
+}
+
+const Token& Parser::PeekNextNext() const {
+    return tokens[current + 2];
 }
 
 const Token& Parser::Previous() const {
@@ -54,36 +63,141 @@ const Token& Parser::Consume(const TokenType type) {
 
 /* PARSE */
 
-std::unique_ptr<ASTNode> Parser::Parse() {
-    auto program = std::make_unique<ProgramNode>();
-
-    while (!IsAtEnd()) {
-        auto node = ParseDeclaration();
-
-        if (node)
-            program->declarations.push_back(std::move(node));
-    }
-    return program;
-}
-
 std::unique_ptr<ASTNode> Parser::ParseDeclaration() {
-    return nullptr;
+    const Token& t = Peek();
+
+    if (Check(TokenType::Const))
+        return ParseVariableDeclaration();
+
+    switch (Peek().type) {
+        case TokenType::Int:
+        case TokenType::Bool:
+        case TokenType::Void:
+            if (PeekNext().type == TokenType::Identifier &&
+                PeekNextNext().type == TokenType::LParen) {
+                return ParseFunction();
+            }
+
+            return ParseVariableDeclaration();
+
+        default:
+            throw std::runtime_error(
+                "Parser error at: " +
+                std::to_string(t.line) + ":" +
+                std::to_string(t.column) +
+                "\nExpected declaration, got '" +
+                std::string(TokenName(t.type)) +
+                "'."
+            );
+    }
 }
 
 /* Functions / Blocks */
 
 std::unique_ptr<ASTNode> Parser::ParseFunction() {
-    return nullptr;
+    const Token& t = Peek();
+
+    TokenType funcType;
+    if (Match(TokenType::Int)) funcType = TokenType::Int;
+    else if (Match(TokenType::Bool)) funcType = TokenType::Bool;
+    else if (Match(TokenType::Void)) funcType = TokenType::Void;
+    else throw std::runtime_error("Parser error: Unknown type at: " 
+                                  + std::to_string(t.line) + " " 
+                                  + std::to_string(t.column));
+    
+    const Token& name = Consume(TokenType::Identifier);
+    const std::string funcName = name.text;
+    Consume(TokenType::LParen);
+    
+    std::vector<std::unique_ptr<ASTNode>> params;
+
+    while (!Check(TokenType::RParen)) {
+        const Token& t2 = Peek();
+        TokenType paramType;
+        
+        if (Match(TokenType::Int)) paramType = TokenType::Int;
+        else if (Match(TokenType::Bool)) paramType = TokenType::Bool;
+        else throw std::runtime_error("Parser error: Unknown type at: " 
+                                  + std::to_string(t2.line) + ":" 
+                                  + std::to_string(t2.column));
+
+        const Token& name = Consume(TokenType::Identifier);
+        const std::string paramName = name.text;
+        
+        auto param = std::make_unique<ParameterNode>(
+            paramType,
+            paramName
+        );
+
+        params.push_back(std::move(param));
+
+        if (Peek().type == TokenType::Comma) {
+            Consume(TokenType::Comma);
+        } else {
+            break;
+        }
+    }
+    
+    Consume(TokenType::RParen);
+    auto body = ParseBlock();
+    
+    return std::make_unique<FunctionNode>(
+        funcType,
+        funcName,
+        std::move(params),
+        std::move(body),
+        SourceLocation{t.line, t.column}
+    );
 }
 
 std::unique_ptr<ASTNode> Parser::ParseBlock() {
-    return nullptr;
+    const Token& t = Peek();
+    Consume(TokenType::LBrace);
+
+    auto block = std::make_unique<BlockNode>(SourceLocation{t.line, t.column});
+
+    while (!Check(TokenType::RBrace) && !IsAtEnd()) {
+        auto statement = ParseStatement();
+        block->statements.push_back(std::move(statement));
+    }
+    Consume(TokenType::RBrace);
+
+    return block;
 }
 
 /* Statements */
 
 std::unique_ptr<ASTNode> Parser::ParseStatement() {
-    return nullptr;
+    switch (Peek().type) {
+        case TokenType::Int:
+        case TokenType::Bool:
+        case TokenType::Const:
+            return ParseVariableDeclaration();
+
+        case TokenType::If:
+            return ParseIfStatement();
+
+        case TokenType::While:
+            return ParseWhileStatement();
+
+        case TokenType::For:
+            return ParseForStatement();
+
+        case TokenType::Return:
+            return ParseReturnStatement();
+
+        case TokenType::Break:
+            return ParseBreakStatement();
+
+        case TokenType::Continue:
+            return ParseContinueStatement();
+
+        case TokenType::LBrace:
+            return ParseBlock();
+
+        default:
+            return ParseExpressionStatement();
+    }
 }
 
 std::unique_ptr<ASTNode> Parser::ParseVariableDeclaration() {
@@ -101,7 +215,7 @@ std::unique_ptr<ASTNode> Parser::ParseVariableDeclaration() {
     else
         throw std::runtime_error("Unknown type at: " 
                             + std::to_string(t.line) 
-                            + " " + std::to_string(t.column));
+                            + ":" + std::to_string(t.column));
     auto name = Peek();
     Consume(TokenType::Identifier);
     

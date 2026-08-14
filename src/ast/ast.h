@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -297,12 +298,15 @@ public:
 
 class ParameterNode : public ASTNode {
 public:
+    TokenType type;
     std::string name;
 
     ParameterNode(
+        TokenType type,
         const std::string& name,
         SourceLocation location = {})
         : ASTNode{ASTNodeType::Parameter, location},
+          type{type},
           name{name}
     {}
 };
@@ -310,16 +314,21 @@ public:
 
 class FunctionNode : public ASTNode {
 public:
+    TokenType type;
     std::string name;
     std::vector<std::unique_ptr<ASTNode>> parameters;
     std::unique_ptr<ASTNode> body;
 
     FunctionNode(
+        TokenType type,
         const std::string& name,
+        std::vector<std::unique_ptr<ASTNode>> params,
         std::unique_ptr<ASTNode> body,
         SourceLocation location = {})
         : ASTNode{ASTNodeType::Function, location},
+          type{type},
           name{name},
+          parameters{std::move(params)},
           body{std::move(body)}
     {}
 };

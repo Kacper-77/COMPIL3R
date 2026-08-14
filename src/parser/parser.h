@@ -19,6 +19,8 @@ private:
 
 
     const Token& Peek() const;
+    const Token& PeekNext() const;
+    const Token& PeekNextNext() const;
     const Token& Previous() const;
 
     const Token& Advance();
