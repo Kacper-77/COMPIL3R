@@ -63,6 +63,16 @@ const Token& Parser::Consume(const TokenType type) {
 
 /* PARSE */
 
+std::unique_ptr<ASTNode> Parser::Parse() {
+    auto program = std::make_unique<ProgramNode>();
+
+    while (!IsAtEnd()) {
+        auto declaration = ParseDeclaration();
+        program->declarations.push_back(std::move(declaration));
+    }
+    return program;
+}
+
 std::unique_ptr<ASTNode> Parser::ParseDeclaration() {
     const Token& t = Peek();
 
@@ -171,8 +181,11 @@ std::unique_ptr<ASTNode> Parser::ParseStatement() {
     switch (Peek().type) {
         case TokenType::Int:
         case TokenType::Bool:
-        case TokenType::Const:
-            return ParseVariableDeclaration();
+        case TokenType::Const: {
+            auto declaration = ParseVariableDeclaration();
+            Consume(TokenType::Semicolon);
+            return declaration;
+        }
 
         case TokenType::If:
             return ParseIfStatement();
@@ -307,7 +320,7 @@ std::unique_ptr<ASTNode> Parser::ParseForStatement() {
     Consume(TokenType::For);
     Consume(TokenType::LParen);
 
-    auto initilizer = ParseDeclaration();
+    auto initilizer = ParseVariableDeclaration();
     Consume(TokenType::Semicolon);
 
     auto condition = ParseExpression();
