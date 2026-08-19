@@ -3,13 +3,18 @@
 #include "token.h"
 #include "parser.h"
 
+/* PASSED AS EXPECTED */
 
 int main() {
     const std::string source = R"(
-        int main() {
-            int x = 10
+        int add(int a, int b) {
+            int result = a + b;
 
-            return x;
+            if (result > 10) {
+                return result;
+            } else {
+                return 0;
+            }
         }
     )";
 

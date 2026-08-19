@@ -3,6 +3,7 @@
 #include "token.h"
 #include "parser.h"
 
+/* FAILED AS EXPECTED */
 
 int main() {
     const std::string source = R"(

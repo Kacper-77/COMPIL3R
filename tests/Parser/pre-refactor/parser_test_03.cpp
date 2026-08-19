@@ -3,15 +3,30 @@
 #include "token.h"
 #include "parser.h"
 
+/* PASSED AS EXPECTED */
 
 int main() {
-    const std::string source = R"(
-        int main() {
-            int x = 10
+const std::string source = R"(
+    int main() {
+        int x = 0;
 
-            return x;
+        for (int i = 0; i < 10; i = i + 1) {
+            while (x < 5) {
+                x = x + 1;
+
+                if (x == 3) {
+                    continue;
+                }
+
+                if (x == 4) {
+                    break;
+                }
+            }
         }
-    )";
+
+        return x;
+    }
+)";
 
     Lexer lexer(source);
 
