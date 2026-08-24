@@ -6,19 +6,29 @@
 #include <utility>
 #include <vector>
 
+
+TokenType Parser::GetType(const Token& token) {
+    if (Match(TokenType::Int))
+        return TokenType::Int;
+
+    if (Match(TokenType::Bool))
+        return TokenType::Bool;
+
+    if (Match(TokenType::Void))
+        return TokenType::Void;
+
+    throw std::runtime_error(
+        "Parser error: Unknown type at: " +
+        std::to_string(token.line) + ":" +
+        std::to_string(token.column)
+    );
+}
+
 Parser::Parser(const std::vector<Token>& tokens)
     : tokens{tokens} {}
 
-const Token& Parser::Peek() const {
-    return tokens[current];
-}
-
-const Token& Parser::PeekNext() const {
-    return tokens[current + 1];
-}
-
-const Token& Parser::PeekNextNext() const {
-    return tokens[current + 2];
+const Token& Parser::Peek(size_t offset) const {
+    return tokens[current + offset];
 }
 
 const Token& Parser::Previous() const {
@@ -76,15 +86,18 @@ std::unique_ptr<ASTNode> Parser::Parse() {
 std::unique_ptr<ASTNode> Parser::ParseDeclaration() {
     const Token& t = Peek();
 
-    if (Check(TokenType::Const))
-        return ParseVariableDeclaration();
+    if (Check(TokenType::Const)) {
+        auto declaration = ParseVariableDeclaration();
+        Consume(TokenType::Semicolon);
+        return declaration;
+}
 
     switch (Peek().type) {
         case TokenType::Int:
         case TokenType::Bool:
         case TokenType::Void:
-            if (PeekNext().type == TokenType::Identifier &&
-                PeekNextNext().type == TokenType::LParen) {
+            if (Peek(1).type == TokenType::Identifier &&
+                Peek(2).type == TokenType::LParen) {
                 return ParseFunction();
             }
 
@@ -107,13 +120,7 @@ std::unique_ptr<ASTNode> Parser::ParseDeclaration() {
 std::unique_ptr<ASTNode> Parser::ParseFunction() {
     const Token& t = Peek();
 
-    TokenType funcType;
-    if (Match(TokenType::Int)) funcType = TokenType::Int;
-    else if (Match(TokenType::Bool)) funcType = TokenType::Bool;
-    else if (Match(TokenType::Void)) funcType = TokenType::Void;
-    else throw std::runtime_error("Parser error: Unknown type at: " 
-                                  + std::to_string(t.line) + " " 
-                                  + std::to_string(t.column));
+    TokenType funcType = GetType(t);
     
     const Token& name = Consume(TokenType::Identifier);
     const std::string funcName = name.text;
@@ -123,13 +130,7 @@ std::unique_ptr<ASTNode> Parser::ParseFunction() {
 
     while (!Check(TokenType::RParen)) {
         const Token& t2 = Peek();
-        TokenType paramType;
-        
-        if (Match(TokenType::Int)) paramType = TokenType::Int;
-        else if (Match(TokenType::Bool)) paramType = TokenType::Bool;
-        else throw std::runtime_error("Parser error: Unknown type at: " 
-                                  + std::to_string(t2.line) + ":" 
-                                  + std::to_string(t2.column));
+        TokenType paramType = GetType(t2);
 
         const Token& name = Consume(TokenType::Identifier);
         const std::string paramName = name.text;
@@ -216,31 +217,23 @@ std::unique_ptr<ASTNode> Parser::ParseStatement() {
 std::unique_ptr<ASTNode> Parser::ParseVariableDeclaration() {
     const Token& t = Peek();
     
-    std::unique_ptr<ASTNode> initilizer;
+    std::unique_ptr<ASTNode> initializer;
     bool isConst = Match(TokenType::Const);
 
-    TokenType type;
+    TokenType type = GetType(Peek());
 
-    if (Match(TokenType::Int)) 
-        type = TokenType::Int;
-    else if (Match(TokenType::Bool))
-        type = TokenType::Bool;
-    else
-        throw std::runtime_error("Unknown type at: " 
-                            + std::to_string(t.line) 
-                            + ":" + std::to_string(t.column));
     auto name = Peek();
     Consume(TokenType::Identifier);
     
     if (!Check(TokenType::Semicolon)) {
         Consume(TokenType::Assign);
-        initilizer = ParseExpression();
+        initializer = ParseExpression();
     }
 
     return std::make_unique<VariableDeclarationNode>(
         type,
         name.text,
-        std::move(initilizer),
+        std::move(initializer),
         isConst,
         SourceLocation{t.line, t.column}
     );

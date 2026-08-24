@@ -18,9 +18,7 @@ private:
     size_t current = 0;
 
 
-    const Token& Peek() const;
-    const Token& PeekNext() const;
-    const Token& PeekNextNext() const;
+    const Token& Peek(size_t offset = 0) const;
     const Token& Previous() const;
 
     const Token& Advance();
@@ -31,6 +29,8 @@ private:
     bool Match(TokenType type);
 
     const Token& Consume(const TokenType type);
+
+    TokenType GetType(const Token& token);
 
     // entry
     std::unique_ptr<ASTNode> ParseDeclaration();
