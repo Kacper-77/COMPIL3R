@@ -33,6 +33,8 @@ enum class TokenType {
     Slash,
 
     Assign,
+    And,
+    Or,
     Not,
 
     // comparison

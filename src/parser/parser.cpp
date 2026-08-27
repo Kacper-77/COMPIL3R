@@ -373,7 +373,7 @@ std::unique_ptr<ASTNode> Parser::ParseExpression() {
 }
 
 std::unique_ptr<ASTNode> Parser::ParseAssignment() {
-    auto target = ParseEquality();
+    auto target = ParseLogical();
 
     if (Match(TokenType::Assign)) {
         const Token& op = Previous();
@@ -402,6 +402,26 @@ std::unique_ptr<ASTNode> Parser::ParseEquality() {
             SourceLocation{op.line, op.column}
         );
     }
+    return expr;
+}
+
+std::unique_ptr<ASTNode> Parser::ParseLogical() {
+    auto expr = ParseEquality();
+
+    while (Peek().type == TokenType::And ||
+           Peek().type == TokenType::Or) {
+
+        const Token& op = Advance();
+        auto right = ParseEquality();
+
+        expr = std::make_unique<BinaryExpressionNode>(
+            op.type,
+            std::move(expr),
+            std::move(right),
+            SourceLocation{op.line, op.column}
+        );
+    }
+
     return expr;
 }
 
@@ -460,6 +480,30 @@ std::unique_ptr<ASTNode> Parser::ParseFactor() {
     return expr;
 }
 
+std::unique_ptr<ASTNode> Parser::ParseCall() {
+    auto expr = ParsePrimary();
+
+    while (Check(TokenType::LParen)) {
+        Consume(TokenType::LParen);
+
+        std::vector<std::unique_ptr<ASTNode>> arguments;
+
+        if (!Check(TokenType::RParen)) {
+            do {
+                arguments.push_back(ParseExpression());
+            } while (Match(TokenType::Comma));
+        }
+
+        Consume(TokenType::RParen);
+
+        expr = std::make_unique<CallExpressionNode>(
+            std::move(expr),
+            std::move(arguments)
+        );
+    }
+    return expr;
+}
+
 std::unique_ptr<ASTNode> Parser::ParseUnary() {
     if (Match(TokenType::Minus) || Match(TokenType::Not)) {
         const Token& op = Previous();
@@ -471,7 +515,7 @@ std::unique_ptr<ASTNode> Parser::ParseUnary() {
             SourceLocation{op.line, op.column}
         );
     }
-    return ParsePrimary();
+    return ParseCall();
 }
 
 std::unique_ptr<ASTNode> Parser::ParsePrimary() {

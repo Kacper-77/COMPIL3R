@@ -166,6 +166,20 @@ Token Lexer::NextToken() {
                 return Token{TokenType::Assign, "=", startLine, startColumn, 1};
             }
 
+        case '&':
+            if (PeekNext() == '&') {
+                Advance();
+                Advance();
+                return Token(TokenType::And, "&&", line, column, 2);
+            }
+
+        case '|':
+            if (PeekNext() == '|') {
+                Advance();
+                Advance();
+                return Token(TokenType::Or, "||", line, column, 2);
+            }
+
         case '!':
             if (PeekNext() == '=') {
                 int startLine = line;

@@ -149,15 +149,16 @@ public:
 
 class CallExpressionNode : public ASTNode {
 public:
-    std::string callee;
-
+    std::unique_ptr<ASTNode> callee;
     std::vector<std::unique_ptr<ASTNode>> arguments;
 
     CallExpressionNode(
-        const std::string& callee,
+        std::unique_ptr<ASTNode> callee,
+        std::vector<std::unique_ptr<ASTNode>> arguments,
         SourceLocation location = {})
         : ASTNode{ASTNodeType::CallExpression, location},
-          callee{callee}
+          callee{std::move(callee)},
+          arguments{std::move(arguments)}
     {}
 };
 

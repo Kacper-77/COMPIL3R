@@ -54,9 +54,11 @@ private:
     std::unique_ptr<ASTNode> ParseExpression();
     std::unique_ptr<ASTNode> ParseAssignment();
     std::unique_ptr<ASTNode> ParseEquality();
+    std::unique_ptr<ASTNode> ParseLogical(); 
     std::unique_ptr<ASTNode> ParseComparison();
     std::unique_ptr<ASTNode> ParseTerm();
     std::unique_ptr<ASTNode> ParseFactor();
+    std::unique_ptr<ASTNode> ParseCall(); 
     std::unique_ptr<ASTNode> ParseUnary();
     std::unique_ptr<ASTNode> ParsePrimary();
 };
