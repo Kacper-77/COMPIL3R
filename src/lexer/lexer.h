@@ -42,6 +42,7 @@ private:
     char Advance();
 
     void SkipWhitespace();
+    void SkipCommentsOneLine();
     bool IsAtEnd() const;
 
     Token ReadIdentifier();

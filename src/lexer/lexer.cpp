@@ -62,9 +62,13 @@ char Lexer::Advance() {
 }
 
 void Lexer::SkipWhitespace() {
-    while (Peek() == ' ' || Peek() == '\n' || Peek() == '\t') {
+    while (Peek() == ' ' || Peek() == '\n' || Peek() == '\t')
         Advance(); 
-    }
+}
+
+void Lexer::SkipCommentsOneLine() {
+    while (Peek() != '\n' && !IsAtEnd())
+        Advance();
 }
 
 bool Lexer::IsAtEnd() const {
@@ -125,9 +129,17 @@ Token Lexer::ReadIdentifier() {
 }
 
 Token Lexer::NextToken() {
-   SkipWhitespace();
+    while (true) {
+        SkipWhitespace();
 
-    if (IsAtEnd()) return Token{TokenType::EndOfFile, "", line, column, 0};
+        if (IsAtEnd()) return Token{TokenType::EndOfFile, "", line, column, 0};
+
+        if (Peek() == '/' && PeekNext() == '/') {
+            SkipCommentsOneLine();
+            continue;
+        }
+        break;
+    }
 
     if (std::isdigit(static_cast<unsigned char>(Peek())))
         return ReadNumber();
