@@ -16,6 +16,9 @@ const char* TokenName(TokenType type) {
 
         case TokenType::Identifier: return "Identifier";
         case TokenType::Number: return "Number";
+
+        case TokenType::Break: return "Break";
+        case TokenType::Continue: return "Continue";
         
         case TokenType::Plus: return "Plus";
         case TokenType::Minus: return "Minus";
@@ -31,6 +34,8 @@ const char* TokenName(TokenType type) {
         case TokenType::LessEqual: return "LessEqual";
         case TokenType::Greater: return "Greater";
         case TokenType::GreaterEqual: return "GreaterEqual";
+        case TokenType::And: return "And";
+        case TokenType::Or: return "Or";
 
         case TokenType::LParen: return "LParen";
         case TokenType::RParen: return "RParen";

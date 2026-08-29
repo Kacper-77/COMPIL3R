@@ -52,7 +52,7 @@ enum class TokenType {
     RBrace,
     Semicolon,
     Comma,
-
+    
     EndOfFile,
     Invalid
 };

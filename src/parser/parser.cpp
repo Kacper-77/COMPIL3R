@@ -90,7 +90,7 @@ std::unique_ptr<ASTNode> Parser::ParseDeclaration() {
         auto declaration = ParseVariableDeclaration();
         Consume(TokenType::Semicolon);
         return declaration;
-}
+    }
 
     switch (Peek().type) {
         case TokenType::Int:

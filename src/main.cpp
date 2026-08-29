@@ -6,7 +6,9 @@
 const std::string valid1 = R"(
     const int global = 10;
 
-    int add(int a, int b) {
+    // comment
+
+    int add(int a, int b) { // comment
         int result = a + b * 2;
         return result;
     }
@@ -18,7 +20,7 @@ const std::string valid1 = R"(
             flag = false;
         } else if (value != 5) {
             flag = true;
-        } else {
+        } else { // comment
             flag = false;
         }
 
@@ -28,6 +30,9 @@ const std::string valid1 = R"(
             if (value == 5) {
                 continue;
             }
+
+            // comment
+            // comment 
 
             if (value == 2) {
                 break;
@@ -42,8 +47,8 @@ const std::string valid1 = R"(
     }
 
     void main() {
-        int x = add(); <--- TO FIX
-        bool result = result(); <--- TO FIX
+        int x = add();
+        bool result = result();
 
         if (!result) {
             return;
@@ -60,7 +65,7 @@ const std::string valid2 = R"(
 
         int y = -x + 20 / 2;
 
-        if (x < y && flag) { <--- TO FIX
+        if (x < y && flag) {
             y = y - 1;
         }
 
