@@ -7,7 +7,7 @@
 
 enum class SymbolKind {
     Variable,
-    Function
+    Function,
 };
 
 struct Symbol {

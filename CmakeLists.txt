@@ -15,6 +15,7 @@ add_executable(${PROJECT_NAME}
     src/lexer/lexer.cpp
     src/token/token.cpp
     src/parser/parser.cpp
+    src/semantics/scope.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -24,6 +25,7 @@ target_include_directories(${PROJECT_NAME}
         src/token/
         src/ast/
         src/parser/
+        src/semantics
 )
 
 if (MSVC)

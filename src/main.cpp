@@ -1,147 +1,212 @@
+#include <cassert>
 #include <iostream>
-#include "lexer.h"
-#include "token.h"
-#include "parser.h"
-
-const std::string valid1 = R"(
-    const int global = 10;
-
-    // comment
-
-    int add(int a, int b) { // comment
-        int result = a + b * 2;
-        return result;
-    }
-
-    bool test(int value) {
-        bool flag = true;
-
-        if (value >= 10) {
-            flag = false;
-        } else if (value != 5) {
-            flag = true;
-        } else { // comment
-            flag = false;
-        }
-
-        while (value > 0) {
-            value = value - 1;
-
-            if (value == 5) {
-                continue;
-            }
-
-            // comment
-            // comment 
-
-            if (value == 2) {
-                break;
-            }
-        }
-
-        for (int i = 0; i < 10; i = i + 1) {
-            value = value + i;
-        }
-
-        return flag;
-    }
-
-    void main() {
-        int x = add();
-        bool result = result();
-
-        if (!result) {
-            return;
-        }
-
-        return;
-    }
-)";
-
-const std::string valid2 = R"(
-    int main() {
-        const int x = 10;
-        bool flag = !false;
-
-        int y = -x + 20 / 2;
-
-        if (x < y && flag) {
-            y = y - 1;
-        }
-
-        while (y != 0) {
-            y = y - 1;
-        }
-
-        return y;
-    }
-)";
-
-const std::string invalid1 = R"(
-    int main() {
-        int x = 10
-        bool flag = true;
-
-        return x;
-    }
-)";
-
-const std::string invalid2 = R"(
-    int main(int x, bool flag {
-        if (x > 10) {
-            return x;
-        }
-
-        while (x != 0) {
-            x = x - 1;
-        }
-
-        return x;
-    }
-)";
-
-void TestParser(const std::string& source, bool shouldPass) {
-    Lexer lexer(source);
-    std::vector<Token> tokens;
-
-    while (true) {
-        Token token = lexer.NextToken();
-        tokens.push_back(token);
-
-        if (token.type == TokenType::EndOfFile)
-            break;
-    }
-
-    try {
-        Parser parser(tokens);
-        auto ast = parser.Parse();
-
-        if (shouldPass)
-            std::cout << "[PASS] expected success\n";
-        else
-            std::cout << "[FAIL] parser accepted invalid source\n";
-    }
-    catch (const std::exception& e) {
-        if (!shouldPass)
-            std::cout << "[PASS] expected parser error: "
-                      << e.what() << '\n';
-        else
-            std::cout << "[FAIL] unexpected parser error: "
-                      << e.what() << '\n';
-    }
-}
+#include "scope.h"
 
 int main() {
-    TestParser(valid1, true);
-    std::cout << "TEST: VALID1\n";
+    std::cout << "### SCOPE TESTS ###\n";
 
-    TestParser(valid2, true);
-    std::cout << "TEST: VALID2\n";
+    // 1. Basic declaration and lookup
+    {
+        Scope global;
 
-    TestParser(invalid1, false);
-    std::cout << "TEST: INVALID1\n";
+        Symbol x;
+        x.name = "x";
+        x.kind = SymbolKind::Variable;
+        x.type = ValueType::Int;
+        x.isConst = false;
 
-    TestParser(invalid2, false);
-    std::cout << "TEST: INVALID2\n";
+        assert(global.Declare(x));
+        assert(global.LookupCurrent("x") != nullptr);
+        assert(global.Lookup("x") != nullptr);
+        assert(global.Lookup("missing") == nullptr);
+
+        std::cout << "[PASS] Basic declaration and lookup\n";
+    }
+
+    // 2. Duplicate declaration
+    {
+        Scope global;
+
+        Symbol x;
+        x.name = "x";
+        x.kind = SymbolKind::Variable;
+        x.type = ValueType::Int;
+
+        assert(global.Declare(x));
+        assert(!global.Declare(x));
+
+        std::cout << "[PASS] Duplicate declaration\n";
+    }
+
+    // 3. Empty symbol name
+    {
+        Scope global;
+
+        Symbol empty;
+        empty.name = "";
+
+        assert(!global.Declare(empty));
+        assert(global.Lookup("") == nullptr);
+
+        std::cout << "[PASS] Empty symbol name\n";
+    }
+
+    // 4. Parent scope lookup
+    {
+        Scope global;
+
+        Symbol x;
+        x.name = "x";
+        x.kind = SymbolKind::Variable;
+        x.type = ValueType::Int;
+
+        assert(global.Declare(x));
+
+        Scope function(&global);
+        assert(function.Lookup("x") != nullptr);
+        assert(function.LookupCurrent("x") == nullptr);
+
+        std::cout << "[PASS] Parent scope lookup\n";
+    }
+
+    // 5. Shadowing
+    {
+        Scope global;
+
+        Symbol x;
+        x.name = "x";
+        x.kind = SymbolKind::Variable;
+        x.type = ValueType::Int;
+
+        assert(global.Declare(x));
+
+        Scope child(&global);
+
+        Symbol localX;
+        localX.name = "x";
+        localX.kind = SymbolKind::Variable;
+        localX.type = ValueType::Bool;
+
+        assert(child.Declare(localX));
+
+        assert(child.LookupCurrent("x")->type == ValueType::Bool);
+        assert(child.Lookup("x")->type == ValueType::Bool);
+        assert(global.Lookup("x")->type == ValueType::Int);
+
+        std::cout << "[PASS] Shadowing\n";
+    }
+
+    // 6. Nested scope lookup
+    {
+        Scope global;
+
+        Symbol x;
+        x.name = "x";
+        x.kind = SymbolKind::Variable;
+        x.type = ValueType::Int;
+
+        assert(global.Declare(x));
+
+        Scope function(&global);
+        Scope block(&function);
+        Scope innerBlock(&block);
+
+        assert(innerBlock.Lookup("x") != nullptr);
+
+        std::cout << "[PASS] Nested scope lookup\n";
+    }
+
+    // 7. Nearest declaration wins
+    {
+        Scope global;
+
+        Symbol x;
+        x.name = "x";
+        x.kind = SymbolKind::Variable;
+        x.type = ValueType::Int;
+        assert(global.Declare(x));
+
+        Scope function(&global);
+
+        Symbol functionX;
+        functionX.name = "x";
+        functionX.kind = SymbolKind::Variable;
+        functionX.type = ValueType::Bool;
+        assert(function.Declare(functionX));
+
+        Scope block(&function);
+
+        assert(block.Lookup("x")->type == ValueType::Bool);
+
+        std::cout << "[PASS] Nearest declaration wins\n";
+    }
+
+    // 8. Parent does not see child declarations
+    {
+        Scope global;
+        Scope child(&global);
+
+        Symbol local;
+        local.name = "local";
+        local.kind = SymbolKind::Variable;
+        local.type = ValueType::Int;
+
+        assert(child.Declare(local));
+
+        assert(global.Lookup("local") == nullptr);
+        assert(child.Lookup("local") != nullptr);
+
+        std::cout << "[PASS] Parent cannot see child symbols\n";
+    }
+
+    // 9. Different symbols in different scopes
+    {
+        Scope global;
+        Scope child(&global);
+
+        Symbol a;
+        a.name = "a";
+        a.kind = SymbolKind::Variable;
+        a.type = ValueType::Int;
+
+        Symbol b;
+        b.name = "b";
+        b.kind = SymbolKind::Variable;
+        b.type = ValueType::Bool;
+
+        assert(global.Declare(a));
+        assert(child.Declare(b));
+
+        assert(child.Lookup("a") != nullptr);
+        assert(child.Lookup("b") != nullptr);
+        assert(global.Lookup("b") == nullptr);
+
+        std::cout << "[PASS] Independent scope contents\n";
+    }
+
+    // 10. Const lookup
+    {
+        Scope global;
+
+        Symbol x;
+        x.name = "x";
+        x.kind = SymbolKind::Variable;
+        x.type = ValueType::Int;
+
+        assert(global.Declare(x));
+
+        const Scope& constGlobal = global;
+
+        const Symbol* found = constGlobal.Lookup("x");
+
+        assert(found != nullptr);
+        assert(found->name == "x");
+        assert(found->type == ValueType::Int);
+
+        std::cout << "[PASS] Const lookup\n";
+    }
+
+    std::cout << "\nALL SCOPE TESTS PASSED!\n";
+
     return 0;
 }
