@@ -16,7 +16,8 @@ public:
 
     Symbol* LookupCurrent(const std::string& name);
     const Symbol* LookupCurrent(const std::string& name) const;
-
+    
+    Scope* GetParent() const;
 private:
     Scope* parent;
 

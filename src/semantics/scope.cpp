@@ -3,6 +3,10 @@
 
 Scope::Scope(Scope* parent) : parent{parent} {}
 
+Scope* Scope::GetParent() const {
+    return parent;
+}
+
 bool Scope::Declare(const Symbol& symbol) {
     Symbol* current = LookupCurrent(symbol.name);
 

@@ -136,9 +136,8 @@ private:
 
 private:
     std::unique_ptr<Scope> globalScope;
-
     Scope* currentScope = nullptr;
-
+    std::vector<std::unique_ptr<Scope>> scopes;
     FunctionNode* currentFunction = nullptr;
 
     int loopDepth = 0;
